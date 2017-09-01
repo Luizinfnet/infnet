@@ -1,0 +1,58 @@
+---
+
+- hosts:       exemplo
+  remote_user: root
+  become:      yes
+  vars:
+    - teamspeak_version: "3.0.11.2"
+    
+  handlers:
+    - name: update teamspeak initscripts
+      command: update-rc.d teamspeak-server
+    - name: restart teamspeak
+      service: name=teamspeak-server state=restarted  
+
+  tasks:
+    - name: create teamspeak user
+      user: name=teamspeak group=teamspeak
+      become: yes
+              
+    - name: create download directory
+      file: path=/home/teamspeak/Downloads state=directory owner=teamspeak group=users
+      become: yes
+
+    - name: download teamspeak server
+      get_url: url="http://dl.4players.de/ts/releases/{{ teamspeak_version }}/teamspeak3-server_linux-amd64-{{ teamspeak_version }}.tar.gz"  dest=/home/teamspeak/Downloads/teamspeak-server-{{ teamspeak_version }}.tar.gz
+      become: yes
+      become_user: teamspeak
+      
+    - name: create teamspeak directory
+      file: name=/home/teamspeak/teamspeak-server-{{ teamspeak_version }} state=directory owner=teamspeak group=users
+      become: yes
+      
+    - name: extract teamspeak
+      unarchive: copy=no src=/home/teamspeak/Downloads/teamspeak-server-{{ teamspeak_version }}.tar.gz dest=/home/teamspeak/teamspeak-server-{{ teamspeak_version }}/  creates=/home/teamspeak/teamspeak-server-{{ teamspeak_version }}/teamspeak3-server_linux-amd64
+      become: yes
+      become_user: teamspeak
+      register: teamspeak_updated
+      
+    - name: template initscript
+      template: src=teamspeak-server.sh dest=/etc/init.d/teamspeak-server owner=root group=root mode=0744
+      become: yes
+      notify: 
+        - restart teamspeak
+      register: teamspeak_initscript_modified
+      
+    - name: stop teamspeak
+      service: name=teamspeak3 state=stopped
+      become: yes
+      when: teamspeak_initscript_modified|changed
+ 
+    - name: update initscipts
+      command: update-rc.d teamspeak-server defaults
+      become: yes
+      when: teamspeak_initscript_modified|changed
+
+    - name: enable teamspeak
+      service: name="teamspeak-server" state=started enabled=yes
+      become: yes
