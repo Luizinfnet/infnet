@@ -1,29 +1,3 @@
-#! /bin/sh
-
-### BEGIN INIT INFO
-
-# Provides:             teamspeak-server
-
-# Required-Start:       $network $local_fs $remote_fs $syslog
-
-# Required-Stop:        $network #local_fs $remote_fs $syslog
-
-# Default-Start:        2 3 4 5
-
-# Default-Stop:         0 1 6
-
-# Short-Description:    TeamSpeak 3 server
-
-# Description:          init script for TeamSpeak 3 server
-
-### END INIT INFO
-
-
-
-# Author: Dharma Bellamkonda <dharma.bellamkonda@gmail.com>
-
-
-
 g_COMMAND="$1"
 
 
